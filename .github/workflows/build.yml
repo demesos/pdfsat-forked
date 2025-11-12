@@ -38,21 +38,24 @@ jobs:
           path: dist/pdfsat*
 
   release:
-      needs: build
-      runs-on: ubuntu-latest
-      if: startsWith(github.ref, 'refs/tags/')
-      steps:
-        - name: Download build artifacts
-          uses: actions/download-artifact@v4
-          with:
-            path: ./artifacts
-    
-        - name: Create GitHub Release
-          uses: softprops/action-gh-release@v2
-          with:
-            files: |
-              ./artifacts/pdfsat-windows-latest/*
-              ./artifacts/pdfsat-ubuntu-latest/*
-              ./artifacts/pdfsat-macos-latest/*
-          env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        needs: build
+        runs-on: ubuntu-latest
+        if: startsWith(github.ref, 'refs/tags/')
+        steps:
+          - name: Download build artifacts
+            uses: actions/download-artifact@v4
+            with:
+              path: ./artifacts
+      
+          - name: Prepare release files
+            run: |
+              mkdir -p ./release
+              find ./artifacts -type f -exec cp {} ./release/ \;
+              ls -la ./release/
+          
+          - name: Create GitHub Release
+            uses: softprops/action-gh-release@v2
+            with:
+              files: ./release/*
+            env:
+              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
